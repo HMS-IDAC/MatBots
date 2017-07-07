@@ -13,3 +13,6 @@ A bot usually performs a much more limited task than an app.
 When possible, bots have a 'headless' mode,
 which allows them to execute a processing pipeline as a typical
 Matlab function, either on an image or a folder of images.
+
+Each directory (except 'docs') contains a bot for the task
+suggested by the directory's name. For more details, see ReadMe.txt inside.
