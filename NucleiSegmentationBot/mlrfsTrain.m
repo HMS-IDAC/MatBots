@@ -6,7 +6,8 @@ nLabels = 3; % assumes background, contour, nuclei labels
 
 h = waitbar(0,'Analyzing data...');
 
-nLayers = 1+(length(imageList) > 3);
+% nLayers = 1+(length(imageList) > 3);
+nLayers = min(3,length(imageList));
 % number of layers in stacked random forest;
 % the algorithm will split the training set in nLayers,
 % so that every layer sees a similar distribution of the training set;
