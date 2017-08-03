@@ -18,13 +18,21 @@ while 1
             if isempty(STST)
                 uiwait(errordlg('Set parameters first.','Error'));
             else
+                saveImages = false;
+                ButtonName = questdlg({'Would you like to save mask and ID',...
+                                       'images to inspect segmentation?',...
+                                       '(This can take up a lot of disk space.)'},...
+                                       'Save Images', 'Yes', 'No', 'No');
+                if strcmp(ButtonName,'Yes')
+                    saveImages = true;
+                end
                 if ~showedNavigate2DirMessage
                     uiwait(msgbox('Next, select folder with images to segment.','Navigate','modal'));
                     showedNavigate2DirMessage = 1;
                 end
                 dirpath = uigetdir;
                 if dirpath ~= 0
-                    siameseThresholdSegmentationHeadlessBot(dirpath,STST.ThrModel,true);
+                    siameseThresholdSegmentationHeadlessBot(dirpath,STST.ThrModel,saveImages);
                 end
             end
             mode = 0;
