@@ -26,7 +26,13 @@ When possible, bots have a 'headless' mode, which allows them to execute a proce
 The first crop of bots perform selected biological-image-analysis pipelines,
 such as nuclei segmentation and point-source scoring. Source code and more details
 are <a href="https://github.com/HMS-IDAC/MatBots">available on GitHub</a>.
-Links to video tutorials and sample datasets are available below for selected bots.
+Below is a list of currently implemented bots, with links to video tutorials and sample datasets
+when available.
+</p>
+
+<p>
+    For even more details, and to cite this work, please refer to the
+    <a href="http://www.biorxiv.org/content/early/2017/08/03/172296">bioRxiv manuscript</a>.
 </p>
 
 <hr>
@@ -55,6 +61,42 @@ Links to video tutorials and sample datasets are available below for selected bo
 <p>
 	For Machine Learning experts: the source code to train a stacked Random Forest for nuclei segmentation,
 	using circularity features, is available <a href="https://hms-idac.github.io/MLRFSwCF/">here</a>. This algorithm is used as the back-end for pixel classification in NucleiSegmentationBot.
+</p>
+
+<hr>
+<p>
+    <h3>PixelClassificationBot</h3>
+</p>
+<p>
+    Assists in training a Machine Learning model to segment grayscale images.
+    This is a more general implementation of NucleiSegmentationBot.
+</p>
+<p>
+    <a href="https://www.dropbox.com/s/f0abxekladzcf5y/Nuclei.zip?dl=0">Sample Data</a>
+</p>
+
+<hr>
+<p>
+    <h3>ImageAnnotationBot</h3>
+</p>
+<p>
+    A stand-alone bot to annotate images (the same used as a module in PixelClassificationBot and NucleiSegmentationBot).
+</p>
+
+<hr>
+<p>
+    <h3>StackPackBot</h3>
+</p>
+<p>
+    A bot to make stacks out of image planes. This can be used to assemble stacks for SpotsInNucleiBot.
+</p>
+
+<hr>
+<p>
+    <h3>SpotMeasureBot</h3>
+</p>
+<p>
+    A bot to measure the size of spot-like (including diffraction-limited) objects.
 </p>
 
 <hr>
