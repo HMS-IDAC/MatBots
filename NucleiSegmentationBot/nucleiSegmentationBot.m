@@ -23,8 +23,8 @@ while 1
             uiwait(msgbox('Next, navigate to image to label.','Label','modal'));
             [filename, pathname] = uigetfile({'*.tif;*.jpg;*.png','Images (.tif, .jpg, .png)'});
             if filename ~= 0
-                IAA = imageAnnotationApp([pathname filename],resizeFactor);
-                clear IAA
+                IAB = imageAnnotationBot([pathname filename],resizeFactor);
+                clear IAB
             end
             mode = 0;
         case 2 % train
