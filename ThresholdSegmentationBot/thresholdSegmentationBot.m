@@ -32,31 +32,20 @@ while 1
                 end
                 dirpath = uigetdir;
                 if dirpath ~= 0
-                    siameseThresholdSegmentationHeadlessBot(dirpath,TST.ThrModel,saveImages);
+                    thresholdSegmentationHeadlessBot(dirpath,TST.ThrModel,saveImages);
                 end
             end
             mode = 0;
         case 2 % set parameters
             if ~showedSelect1Message
-                uiwait(msgbox('Next, select 2 images to open.','Navigate','modal'));
+                uiwait(msgbox('Next, select image to open.','Navigate','modal'));
                 showedSelect1Message = 1;
             end
-            [filename, pathname] = uigetfile({'*.tif;*.jpg;*.png','Images (.tif, .jpg, .png)'},'MultiSelect','on');
-            if isa(filename,'char') 
-                uiwait(errordlg('Select 2 images to open.','Error'));
-                mode = 2;
-            elseif isa(filename,'cell')
-                if length(filename) > 2
-                    uiwait(errordlg('Select just 2 images to open.','Error'));
-                    mode = 2;
-                else
-                    I1 = imreadGrayscaleDouble([pathname filesep filename{1}]);
-                    I2 = imreadGrayscaleDouble([pathname filesep filename{2}]);
-                    TST = siameseThresholdSegmentationTool(I1,I2);
-                    mode = 0;
-                end
-            else
-                mode = 0;
+            [filename, pathname] = uigetfile({'*.tif;*.jpg;*.png','Images (.tif, .jpg, .png)'});
+            if filename ~= 0
+                I = imreadGrayscaleDouble([pathname filesep filename]);
+                TST = thresholdSegmentationTool(I);
             end
+            mode = 0;
     end
 end
