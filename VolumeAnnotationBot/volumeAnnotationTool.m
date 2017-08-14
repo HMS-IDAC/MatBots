@@ -46,6 +46,10 @@ classdef volumeAnnotationTool < handle
             tool.NLabels = nLabels;
             tool.LabelMasks = zeros(size(V,1),size(V,2),size(V,3),nLabels);
             tool.LabelIndex = 1;
+            labels = cell(1,nLabels);
+            for i = 1:nLabels
+                labels{i} = sprintf('Class %d',i);
+            end
             
             ss = get(0,'ScreenSize');
             tool.Figure = figure('Position',[ss(3)/4 ss(4)/3 ss(3)/2 ss(4)/3],...
@@ -63,8 +67,11 @@ classdef volumeAnnotationTool < handle
             % y
             tool.Axis{1} = subplot(1,3,2);
             I = tool.Volume(tool.PlaneIndex{1},:,:);
-            I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
-            tool.PlaneHandle{1} = imshow(tool.applyThresholds(I));
+%             I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
+            I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
+            tool.PlaneHandle{1} = imshow(tool.applyThresholds(I)); hold on;
+            J = ones(size(I)); J = cat(3,zeros(size(I,1),size(I,2),2),J);
+            tool.TransparencyHandle{1} = imshow(J); tool.TransparencyHandle{1}.AlphaData = zeros(size(I)); hold off;
             tool.ImageSize{1} = size(I);
             tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
             tool.PlaneY = [1               tool.PlaneIndex{1} 1              ;...
@@ -75,8 +82,11 @@ classdef volumeAnnotationTool < handle
             % x
             tool.Axis{2} = subplot(1,3,1);
             I = tool.Volume(:,tool.PlaneIndex{2},:);
-            I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
-            tool.PlaneHandle{2} = imshow(tool.applyThresholds(I));
+%             I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
+            I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
+            tool.PlaneHandle{2} = imshow(tool.applyThresholds(I)); hold on;
+            J = ones(size(I)); J = cat(3,zeros(size(I,1),size(I,2),2),J);
+            tool.TransparencyHandle{2} = imshow(J); tool.TransparencyHandle{2}.AlphaData = zeros(size(I)); hold off;
             tool.ImageSize{2} = size(I);
             tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
             tool.PlaneX = [tool.PlaneIndex{2} 1               1              ;...
@@ -87,7 +97,9 @@ classdef volumeAnnotationTool < handle
             % z
             tool.Axis{3} = subplot(1,3,3);
             I = tool.Volume(:,:,tool.PlaneIndex{3});
-            tool.PlaneHandle{3} = imshow(tool.applyThresholds(I));
+            tool.PlaneHandle{3} = imshow(tool.applyThresholds(I)); hold on;
+            J = ones(size(I)); J = cat(3,zeros(size(I,1),size(I,2),2),J);
+            tool.TransparencyHandle{3} = imshow(J); tool.TransparencyHandle{3}.AlphaData = zeros(size(I)); hold off;
             tool.ImageSize{3} = size(I);
             tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
             tool.PlaneZ = [1               1               tool.PlaneIndex{3};...
@@ -101,10 +113,13 @@ classdef volumeAnnotationTool < handle
             cheight = 20;
             
             tool.Dialog = dialog('WindowStyle', 'normal',...
-                                'Name', 'VolumeViewTool',...
+                                'Name', 'VolumeAnnotationTool',...
                                 'CloseRequestFcn', @tool.closeTool,...
-                                'Position',[100 100 dwidth 6*dborder+6*cheight]);
+                                'Position',[100 100 dwidth 8*dborder+8*cheight]);
             
+            % class popup
+            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 7*dborder+7*cheight cwidth-20 cheight],'Callback',@tool.popupManage);
+                            
             % y slider
             uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 4*dborder+4*cheight 20 cheight]);
             slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{1},'Value',tool.PlaneIndex{1},'Position',[dborder+20 4*dborder+4*cheight cwidth-20 cheight],'Tag','ys');
@@ -130,6 +145,7 @@ classdef volumeAnnotationTool < handle
             tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 dborder cwidth-20 cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
+            % context figure
             tool.FigureContext = figure('Name','3D Context','NumberTitle','off',...
                                         'Position',[tool.Figure.Position(1)+tool.Figure.Position(3)+10 ...
                                                     tool.Figure.Position(2) tool.Figure.Position(4) tool.Figure.Position(4)],...
@@ -147,6 +163,13 @@ classdef volumeAnnotationTool < handle
             tool.RadioDraw.Value = 1;
             
 %             uiwait(tool.Dialog)
+        end
+        
+        function popupManage(tool,src,~)
+            tool.LabelIndex = src.Value;
+            tool.TransparencyHandle{1}.AlphaData =  0.5*reshape(tool.LabelMasks(tool.PlaneIndex{1},:,:,tool.LabelIndex),[tool.NPlanes{2} tool.NPlanes{3}]);
+            tool.TransparencyHandle{2}.AlphaData =  0.5*reshape(tool.LabelMasks(:,tool.PlaneIndex{2},:,tool.LabelIndex),[tool.NPlanes{1} tool.NPlanes{3}]);
+            tool.TransparencyHandle{3}.AlphaData =  0.5*tool.LabelMasks(:,:,tool.PlaneIndex{3},tool.LabelIndex);
         end
         
         function mouseDown(tool,~,~)
@@ -168,25 +191,39 @@ classdef volumeAnnotationTool < handle
                     if row > ps && row <= imageSize(1)-ps && col > ps && col <= imageSize(2)-ps
                         switch i
                             case 1
-                                
+                                [Y,X] = meshgrid(-ps:ps,-ps:ps);
+                                Curr = tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex);
+                                Mask = reshape(sqrt(X.^2+Y.^2) < ps,[1 size(Y,1) size(Y,2)]);
+                                if tool.RadioDraw.Value == 1
+                                    tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
+                                    tool.TransparencyHandle{1}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(0.5*max(Curr,Mask),size(Y));
+                                elseif tool.RadioErase.Value == 1
+                                    tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
+                                    tool.TransparencyHandle{1}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(min(Curr,0.5*(1-Mask)),size(Y));
+                                end
                             case 2
-                                
+                                [Y,X] = meshgrid(-ps:ps,-ps:ps);
+                                Curr = tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex);
+                                Mask = reshape(sqrt(X.^2+Y.^2) < ps,[size(Y,1) 1 size(Y,2)]);
+                                if tool.RadioDraw.Value == 1
+                                    tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
+                                    tool.TransparencyHandle{2}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(0.5*max(Curr,Mask),size(Y));
+                                elseif tool.RadioErase.Value == 1
+                                    tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
+                                    tool.TransparencyHandle{2}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(min(Curr,0.5*(1-Mask)),size(Y));
+                                end
                             case 3
                                 [Y,X] = meshgrid(-ps:ps,-ps:ps);
                                 Curr = tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex);
                                 Mask = sqrt(X.^2+Y.^2) < ps;
+                                if tool.RadioDraw.Value == 1
+                                    tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex) = max(Curr,Mask);
+                                    tool.TransparencyHandle{3}.AlphaData(row-ps:row+ps,col-ps:col+ps) = 0.5*max(Curr,Mask);
+                                elseif tool.RadioErase.Value == 1
+                                    tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex) = min(Curr,1-Mask);
+                                    tool.TransparencyHandle{3}.AlphaData(row-ps:row+ps,col-ps:col+ps) = min(Curr,0.5*(1-Mask));
+                                end
                         end
-                        
-%                         [Y,X] = meshgrid(-ps:ps,-ps:ps);
-%                         Curr = tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.LabelIndex);
-%                         Mask = sqrt(X.^2+Y.^2) < ps;
-%                         if tool.RadioDraw.Value == 1
-%                             tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
-%                             tool.TransparencyHandle.AlphaData(row-ps:row+ps,col-ps:col+ps) = 0.5*max(Curr,Mask);
-%                         elseif tool.RadioErase.Value == 1
-%                             tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
-%                             tool.TransparencyHandle.AlphaData(row-ps:row+ps,col-ps:col+ps) = min(Curr,0.5*(1-Mask));
-%                         end
                     end
                 end
             end
@@ -203,11 +240,13 @@ classdef volumeAnnotationTool < handle
                 end
                 
                 I = tool.Volume(tool.PlaneIndex{1},:,:);
-                I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
+%                 I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
+                I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
                 tool.PlaneHandle{1}.CData = tool.applyThresholds(I);
                 
                 I = tool.Volume(:,tool.PlaneIndex{2},:);
-                I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
+%                 I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
+                I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
                 tool.PlaneHandle{2}.CData = tool.applyThresholds(I);
                 
                 I = tool.Volume(:,:,tool.PlaneIndex{3});
@@ -218,8 +257,10 @@ classdef volumeAnnotationTool < handle
                     tool.PlaneY(:,2) = tool.PlaneIndex{1}; tool.PlaneYHandle.Vertices = tool.PlaneY;
                     
                     I = tool.Volume(tool.PlaneIndex{1},:,:);
-                    I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
+%                     I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
+                    I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
                     tool.PlaneHandle{1}.CData = tool.applyThresholds(I);
+                    tool.TransparencyHandle{1}.AlphaData = reshape(0.5*tool.LabelMasks(tool.PlaneIndex{1},:,:,tool.LabelIndex),size(I));
                     
                     tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
                     tool.PlaneYLabel.Position = [tool.PlaneY(2,1),tool.PlaneY(2,2),tool.PlaneY(2,3)];
@@ -229,8 +270,10 @@ classdef volumeAnnotationTool < handle
                     tool.PlaneX(:,1) = tool.PlaneIndex{2}; tool.PlaneXHandle.Vertices = tool.PlaneX;
                     
                     I = tool.Volume(:,tool.PlaneIndex{2},:);
-                    I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
+%                     I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
+                    I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
                     tool.PlaneHandle{2}.CData = tool.applyThresholds(I);
+                    tool.TransparencyHandle{2}.AlphaData = reshape(0.5*tool.LabelMasks(:,tool.PlaneIndex{2},:,tool.LabelIndex),size(I));
                     
                     tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
                     tool.PlaneXLabel.Position = [tool.PlaneX(1,1),tool.PlaneX(1,2),tool.PlaneX(1,3)];
@@ -241,6 +284,7 @@ classdef volumeAnnotationTool < handle
                     
                     I = tool.Volume(:,:,tool.PlaneIndex{3});
                     tool.PlaneHandle{3}.CData = tool.applyThresholds(I);
+                    tool.TransparencyHandle{3}.AlphaData = 0.5*tool.LabelMasks(:,:,tool.PlaneIndex{3},tool.LabelIndex);
                     
                     tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
                     tool.PlaneZLabel.Position = [tool.PlaneZ(3,1),tool.PlaneZ(3,2),tool.PlaneZ(3,3)];
