@@ -173,7 +173,7 @@ if displayProgressBar
     waitbar(9/9,wtBar);
 end
 
-satMask = img == max2(img);
+satMask = img == max(max(img));
 satMask = imerode(satMask,strel('disk',1,0));
 satMask = imdilate(satMask,strel('disk',ceil(3*sigma),0));
 
