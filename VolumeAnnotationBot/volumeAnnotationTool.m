@@ -32,6 +32,8 @@ classdef volumeAnnotationTool < handle
         PlaneXLabel
         PlaneYLabel
         PlaneZLabel
+        HLineHandle
+        VLineHandle
     end
     
     methods
@@ -71,8 +73,10 @@ classdef volumeAnnotationTool < handle
 %             I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
             I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
             tool.PlaneHandle{1} = imshow(tool.applyThresholds(I)); hold on;
-            J = ones(size(I)); J = cat(3,zeros(size(I,1),size(I,2),2),J);
-            tool.TransparencyHandle{1} = imshow(J); tool.TransparencyHandle{1}.AlphaData = zeros(size(I)); hold off;
+            J = zeros(size(I)); J = cat(3,ones(size(I,1),size(I,2),2),J);
+            tool.TransparencyHandle{1} = imshow(J); tool.TransparencyHandle{1}.AlphaData = zeros(size(I));
+            tool.HLineHandle{1} = plot([1 tool.NPlanes{3}],[tool.PlaneIndex{2} tool.PlaneIndex{2}],'r');
+            tool.VLineHandle{1} = plot([tool.PlaneIndex{3} tool.PlaneIndex{3}],[1 tool.NPlanes{2}],'b');  hold off;
             tool.ImageSize{1} = size(I);
             tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
             tool.PlaneY = [1               tool.PlaneIndex{1} 1              ;...
@@ -86,8 +90,10 @@ classdef volumeAnnotationTool < handle
 %             I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
             I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
             tool.PlaneHandle{2} = imshow(tool.applyThresholds(I)); hold on;
-            J = ones(size(I)); J = cat(3,zeros(size(I,1),size(I,2),2),J);
-            tool.TransparencyHandle{2} = imshow(J); tool.TransparencyHandle{2}.AlphaData = zeros(size(I)); hold off;
+            J = zeros(size(I)); J = cat(3,ones(size(I,1),size(I,2),2),J);
+            tool.TransparencyHandle{2} = imshow(J); tool.TransparencyHandle{2}.AlphaData = zeros(size(I));
+            tool.HLineHandle{2} = plot([1 tool.NPlanes{3}],[tool.PlaneIndex{1} tool.PlaneIndex{1}],'g');
+            tool.VLineHandle{2} = plot([tool.PlaneIndex{3} tool.PlaneIndex{3}],[1 tool.NPlanes{1}],'b');  hold off;
             tool.ImageSize{2} = size(I);
             tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
             tool.PlaneX = [tool.PlaneIndex{2} 1               1              ;...
@@ -99,8 +105,10 @@ classdef volumeAnnotationTool < handle
             tool.Axis{3} = subplot(1,3,3);
             I = tool.Volume(:,:,tool.PlaneIndex{3});
             tool.PlaneHandle{3} = imshow(tool.applyThresholds(I)); hold on;
-            J = ones(size(I)); J = cat(3,zeros(size(I,1),size(I,2),2),J);
-            tool.TransparencyHandle{3} = imshow(J); tool.TransparencyHandle{3}.AlphaData = zeros(size(I)); hold off;
+            J = zeros(size(I)); J = cat(3,ones(size(I,1),size(I,2),2),J);
+            tool.TransparencyHandle{3} = imshow(J); tool.TransparencyHandle{3}.AlphaData = zeros(size(I));
+            tool.HLineHandle{3} = plot([1 tool.NPlanes{2}],[tool.PlaneIndex{1} tool.PlaneIndex{1}],'g');
+            tool.VLineHandle{3} = plot([tool.PlaneIndex{2} tool.PlaneIndex{2}],[1 tool.NPlanes{1}],'r');  hold off;
             tool.ImageSize{3} = size(I);
             tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
             tool.PlaneZ = [1               1               tool.PlaneIndex{3};...
@@ -175,7 +183,7 @@ classdef volumeAnnotationTool < handle
             
             tool.MouseIsDown = false;
             
-%             uiwait(tool.Dialog)
+            uiwait(tool.Dialog)
         end
         
         function changeSliderRange(tool,src,callbackdata)
@@ -306,6 +314,9 @@ classdef volumeAnnotationTool < handle
                     tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
                     tool.PlaneYLabel.Position = [tool.PlaneY(2,1),tool.PlaneY(2,2),tool.PlaneY(2,3)];
                     tool.PlaneYLabel.String = sprintf('y = %d', tool.PlaneIndex{1});
+                    
+                    tool.HLineHandle{2}.YData = [tool.PlaneIndex{1} tool.PlaneIndex{1}];
+                    tool.HLineHandle{3}.YData = [tool.PlaneIndex{1} tool.PlaneIndex{1}];
                 elseif strcmp(tag,'xs')
                     tool.PlaneIndex{2} = round(value);
                     tool.PlaneX(:,1) = tool.PlaneIndex{2}; tool.PlaneXHandle.Vertices = tool.PlaneX;
@@ -319,6 +330,9 @@ classdef volumeAnnotationTool < handle
                     tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
                     tool.PlaneXLabel.Position = [tool.PlaneX(1,1),tool.PlaneX(1,2),tool.PlaneX(1,3)];
                     tool.PlaneXLabel.String = sprintf('x = %d', tool.PlaneIndex{2});
+                    
+                    tool.HLineHandle{1}.YData = [tool.PlaneIndex{2} tool.PlaneIndex{2}];
+                    tool.VLineHandle{3}.XData = [tool.PlaneIndex{2} tool.PlaneIndex{2}];
                 elseif strcmp(tag,'zs')
                     tool.PlaneIndex{3} = round(value);
                     tool.PlaneZ(:,3) = tool.PlaneIndex{3}; tool.PlaneZHandle.Vertices = tool.PlaneZ;
@@ -330,6 +344,9 @@ classdef volumeAnnotationTool < handle
                     tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
                     tool.PlaneZLabel.Position = [tool.PlaneZ(3,1),tool.PlaneZ(3,2),tool.PlaneZ(3,3)];
                     tool.PlaneZLabel.String = sprintf('z = %d', tool.PlaneIndex{3});
+                    
+                    tool.VLineHandle{1}.XData = [tool.PlaneIndex{3} tool.PlaneIndex{3}];
+                    tool.VLineHandle{2}.XData = [tool.PlaneIndex{3} tool.PlaneIndex{3}];
                 end
             elseif strcmp(tag,'pss')
                 tool.PenSize = round(callbackdata.AffectedObject.Value);
