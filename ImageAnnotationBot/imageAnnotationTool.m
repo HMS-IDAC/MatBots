@@ -14,8 +14,9 @@ classdef imageAnnotationTool < handle
         Dialog
         RadioDraw
         RadioErase
-        FolderPath
-        ImageName
+%         FolderPath
+%         ImageName
+        DidAnnotate
         Slider
         SliderMin
         SliderMax
@@ -25,10 +26,11 @@ classdef imageAnnotationTool < handle
     
     methods
         
-        function tool = imageAnnotationTool(imagePath,nLabels)
-            [tool.FolderPath, tool.ImageName] = fileparts(imagePath);
-            I = imreadGrayscaleDouble(imagePath);
+        function tool = imageAnnotationTool(I,nLabels)
+%             [tool.FolderPath, tool.ImageName] = fileparts(imagePath);
+%             I = imreadGrayscaleDouble(imagePath);
             
+            tool.DidAnnotate = 0;
             tool.LabelIndex = 1;
             tool.Image = I;
             J = ones(size(tool.Image));
@@ -178,9 +180,11 @@ classdef imageAnnotationTool < handle
         
         function buttonDonePushed(tool,src,callbackdata)
             NoOverlap = sum(tool.LabelMasks,3) <= 1;
-            for i = 1:tool.NLabels
-                imwrite(tool.LabelMasks(:,:,i).*NoOverlap,[tool.FolderPath sprintf('/%s_Class%d.png',tool.ImageName,i)]);
-            end
+%             for i = 1:tool.NLabels
+%                 imwrite(tool.LabelMasks(:,:,i).*NoOverlap,[tool.FolderPath sprintf('/%s_Class%d.png',tool.ImageName,i)]);
+%             end
+            tool.LabelMasks = tool.LabelMasks.*repmat(NoOverlap,[1 1 tool.NLabels]);
+            tool.DidAnnotate = 1;
             delete(tool.Dialog);
             delete(tool.Figure);
         end

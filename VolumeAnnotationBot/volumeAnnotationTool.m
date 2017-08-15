@@ -34,11 +34,14 @@ classdef volumeAnnotationTool < handle
         PlaneZLabel
         HLineHandle
         VLineHandle
+        DidAnnotate
     end
     
     methods
         function tool = volumeAnnotationTool(V,nLabels)
             % V should be 'double' and in the range [0,1]
+            
+            tool.DidAnnotate = 0;
             
             tool.Volume = V;
             for i = 1:3
@@ -124,49 +127,52 @@ classdef volumeAnnotationTool < handle
             tool.Dialog = dialog('WindowStyle', 'normal',...
                                 'Name', 'VolumeAnnotationTool',...
                                 'CloseRequestFcn', @tool.closeTool,...
-                                'Position',[100 100 dwidth 10*dborder+12*cheight]);
+                                'Position',[100 100 dwidth 12*dborder+14*cheight]);
             
             % pencil/eraser slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','Pencil/Eraser Size','Position',[dborder+20 8.5*dborder+11*cheight cwidth-20 cheight],'HorizontalAlignment','left');
-            tool.PenSizeText = uicontrol('Parent',tool.Dialog,'Style','text','String','5','Position',[dborder+20+(cwidth-20)/2-25 9*dborder+10*cheight 50 cheight],'HorizontalAlignment','center');
-            uicontrol('Parent',tool.Dialog,'Style','edit','String','10','Position',[dborder+cwidth-50 9*dborder+10*cheight 50 cheight],'HorizontalAlignment','right','Callback',@tool.changeSliderRange,'Tag','sliderMax');
-            uicontrol('Parent',tool.Dialog,'Style','edit','String','1','Position',[dborder+20 9*dborder+10*cheight 50 cheight],'HorizontalAlignment','left','Callback',@tool.changeSliderRange,'Tag','sliderMin');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','Pencil/Eraser Size','Position',[dborder+20 10.5*dborder+13*cheight cwidth-20 cheight],'HorizontalAlignment','left');
+            tool.PenSizeText = uicontrol('Parent',tool.Dialog,'Style','text','String','5','Position',[dborder+20+(cwidth-20)/2-25 11*dborder+12*cheight 50 cheight],'HorizontalAlignment','center');
+            uicontrol('Parent',tool.Dialog,'Style','edit','String','10','Position',[dborder+cwidth-50 11*dborder+12*cheight 50 cheight],'HorizontalAlignment','right','Callback',@tool.changeSliderRange,'Tag','sliderMax');
+            uicontrol('Parent',tool.Dialog,'Style','edit','String','1','Position',[dborder+20 11*dborder+12*cheight 50 cheight],'HorizontalAlignment','left','Callback',@tool.changeSliderRange,'Tag','sliderMin');
             tool.PenSize = 5;
-            tool.Slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',10,'Value',tool.PenSize,'Position',[dborder+20 9*dborder+9*cheight cwidth-20 cheight],'Callback',@tool.sliderManage,'Tag','pss');
+            tool.Slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',10,'Value',tool.PenSize,'Position',[dborder+20 11*dborder+11*cheight cwidth-20 cheight],'Callback',@tool.sliderManage,'Tag','pss');
             addlistener(tool.Slider,'Value','PostSet',@tool.continuousSliderManage);
                             
             % erase/draw
-            tool.RadioDraw = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+20 8*dborder+8*cheight 70 cheight],'String','Draw','Callback',@tool.radioDraw);
-            tool.RadioErase = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+90 8*dborder+8*cheight 70 cheight],'String','Erase','Callback',@tool.radioErase);
+            tool.RadioDraw = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+20 10*dborder+10*cheight 70 cheight],'String','Draw','Callback',@tool.radioDraw);
+            tool.RadioErase = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+90 10*dborder+10*cheight 70 cheight],'String','Erase','Callback',@tool.radioErase);
             tool.RadioDraw.Value = 1;
                             
             % class popup
-            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 7*dborder+7*cheight cwidth-20 cheight],'Callback',@tool.popupManage);
+            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 9*dborder+9*cheight cwidth-20 cheight],'Callback',@tool.popupManage);
                             
             % y slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 4*dborder+4*cheight 20 cheight]);
-            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{1},'Value',tool.PlaneIndex{1},'Position',[dborder+20 4*dborder+4*cheight cwidth-20 cheight],'Tag','ys');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 6*dborder+6*cheight 20 cheight]);
+            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{1},'Value',tool.PlaneIndex{1},'Position',[dborder+20 6*dborder+6*cheight cwidth-20 cheight],'Tag','ys');
             addlistener(slider,'Value','PostSet',@tool.continuousSliderManage);
                             
             % x slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','x','Position',[dborder 5*dborder+5*cheight 20 cheight]);
-            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{2},'Value',tool.PlaneIndex{2},'Position',[dborder+20 5*dborder+5*cheight cwidth-20 cheight],'Tag','xs');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','x','Position',[dborder 7*dborder+7*cheight 20 cheight]);
+            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{2},'Value',tool.PlaneIndex{2},'Position',[dborder+20 7*dborder+7*cheight cwidth-20 cheight],'Tag','xs');
             addlistener(slider,'Value','PostSet',@tool.continuousSliderManage);
                             
             % z slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','z','Position',[dborder 3*dborder+3*cheight 20 cheight]);
-            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{3},'Value',tool.PlaneIndex{3},'Position',[dborder+20 3*dborder+3*cheight cwidth-20 cheight],'Tag','zs');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','z','Position',[dborder 5*dborder+5*cheight 20 cheight]);
+            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{3},'Value',tool.PlaneIndex{3},'Position',[dborder+20 5*dborder+5*cheight cwidth-20 cheight],'Tag','zs');
             addlistener(slider,'Value','PostSet',@tool.continuousSliderManage);
 
             % lower threshold slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','_t','Position',[dborder 2*dborder+cheight 20 cheight]);
-            tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder+20 2*dborder+cheight cwidth-20 cheight],'Tag','lts');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','_t','Position',[dborder 4*dborder+3*cheight 20 cheight]);
+            tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder+20 4*dborder+3*cheight cwidth-20 cheight],'Tag','lts');
             addlistener(tool.LowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % upper threshold slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder dborder 20 cheight]);
-            tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 dborder cwidth-20 cheight],'Tag','uts');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder 3*dborder+2*cheight 20 cheight]);
+            tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 3*dborder+2*cheight cwidth-20 cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
+            
+            % done button
+            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Save Labels','Position',[dborder+20 dborder cwidth-20 2*cheight],'Callback',@tool.buttonDonePushed);
             
             % context figure
             tool.FigureContext = figure('Name','3D Context','NumberTitle','off',...
@@ -186,7 +192,7 @@ classdef volumeAnnotationTool < handle
             uiwait(tool.Dialog)
         end
         
-        function changeSliderRange(tool,src,callbackdata)
+        function changeSliderRange(tool,src,~)
             value = str2double(src.String);
             if strcmp(src.Tag,'sliderMin')
                 tool.Slider.Min = value;
@@ -384,6 +390,13 @@ classdef volumeAnnotationTool < handle
             delete(tool.Figure);
             delete(tool.FigureContext);
             delete(tool.Dialog);
+        end
+        
+        function buttonDonePushed(tool,~,~)
+            NoOverlap = sum(tool.LabelMasks,4) <= 1;
+            tool.LabelMasks = tool.LabelMasks.*repmat(NoOverlap,[1 1 1 tool.NLabels]);
+            tool.DidAnnotate = 1;
+            tool.closeTool();
         end
     end
 end
