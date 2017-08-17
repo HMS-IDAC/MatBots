@@ -38,7 +38,7 @@ classdef volumeAnnotationTool < handle
     end
     
     methods
-        function tool = volumeAnnotationTool(V,nLabels)
+        function tool = volumeAnnotationTool(V,nLabels,varargin)
             % V should be 'double' and in the range [0,1]
             
             tool.DidAnnotate = 0;
@@ -172,7 +172,12 @@ classdef volumeAnnotationTool < handle
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % done button
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Save Labels','Position',[dborder+20 dborder cwidth-20 2*cheight],'Callback',@tool.buttonDonePushed);
+            if nargin > 2
+                buttonDoneLabel = varargin{1};
+            else
+                buttonDoneLabel = 'Done';
+            end
+            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',buttonDoneLabel,'Position',[dborder+20 dborder cwidth-20 2*cheight],'Callback',@tool.buttonDonePushed);
             
             % context figure
             tool.FigureContext = figure('Name','3D Context','NumberTitle','off',...
