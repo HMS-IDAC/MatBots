@@ -6,6 +6,7 @@
 %
 %              'mode' : parameters to estimate. Default: 'xyAc'.
 %             'alpha' : alpha value used in the statistical tests. Default: 0.05.
+%                       (probability of selecting a local maxima when it's actually not one)
 %              'mask' : mask of pixels (i.e., cell mask) to include in the detection. Default: all.
 %       'FitMixtures' : true|{false}. Toggles mixture-model fitting.
 %       'MaxMixtures' : maximum number of mixtures to fit. Default: 5.
