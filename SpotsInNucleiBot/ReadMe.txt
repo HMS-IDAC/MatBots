@@ -16,3 +16,11 @@ and two to detect spots (LoG, and Advanced LoG).
 
 The Machine Learning algorithm requires a model trained to segment nuclei.
 To train such model, use the nucleiSegmentationBot (under NucleiSegmentationBot).
+
+Acknowledgements:
+
+fmgaussfit.m was developed by Nathan Orloff:
+https://www.mathworks.com/matlabcentral/fileexchange/41938-fit-2d-gaussian-with-optimization-toolbox
+
+advPointSourceDetection.m is based on code developed by Francois Aguet:
+http://www.sciencedirect.com/science/article/pii/S1534580713003821

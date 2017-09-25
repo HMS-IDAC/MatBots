@@ -16,3 +16,5 @@ Matlab function, either on an image or a folder of images.
 
 Each directory (except 'docs') contains a bot for the task
 suggested by the directory's name. For more details, see ReadMe.txt inside.
+
+For references and video tutorials, see https://hms-idac.github.io/MatBots/

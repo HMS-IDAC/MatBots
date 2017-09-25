@@ -12,3 +12,8 @@ will be output, along with plots of the spot and fitted gaussian.
 The Threshold window contains two sliders to control upper and lower
 threshold in the image, which can help visualizing spots if the pixel intensity
 is not well equalized.
+
+Acknowledgement:
+
+fmgaussfit.m was developed by Nathan Orloff:
+https://www.mathworks.com/matlabcentral/fileexchange/41938-fit-2d-gaussian-with-optimization-toolbox
