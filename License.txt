@@ -1,6 +1,6 @@
 Copyright (c) 2017 - President and Fellows of Harvard College. All rights reserved.
  
-Developed by:  Marcelo Cicconet
+Developed by: Marcelo Cicconet
 Image and Data Analysis Core, Harvard Medical School
 Hunter Lee Elliott, PhD, Director
 http://idac.hms.harvard.edu/
