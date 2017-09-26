@@ -26,10 +26,7 @@ classdef imageAnnotationTool < handle
     
     methods
         
-        function tool = imageAnnotationTool(I,nLabels)
-%             [tool.FolderPath, tool.ImageName] = fileparts(imagePath);
-%             I = imreadGrayscaleDouble(imagePath);
-            
+        function tool = imageAnnotationTool(I,nLabels,varargin)
             tool.DidAnnotate = 0;
             tool.LabelIndex = 1;
             tool.Image = I;
@@ -100,7 +97,12 @@ classdef imageAnnotationTool < handle
             uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder 2*dborder+cheight cwidth cheight],'Callback',@tool.popupManage);
 
             % done button
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Save Labels','Position',[dborder dborder cwidth cheight],'Callback',@tool.buttonDonePushed);
+            if isempty(varargin)
+                doneButtonLabel = 'Done';
+            else
+                doneButtonLabel = varargin;
+            end
+            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',doneButtonLabel,'Position',[dborder dborder cwidth cheight],'Callback',@tool.buttonDonePushed);
             
             uiwait(tool.Dialog)
         end

@@ -9,7 +9,7 @@ while annotateAnother
         if ~isempty(answer)
             nLabels = str2double(answer{1});
             I = imreadGrayscaleDouble([pathname filesep filename]);  
-            IAT = imageAnnotationTool(I,nLabels);
+            IAT = imageAnnotationTool(I,nLabels,'Save Labels');
             if IAT.DidAnnotate
                 [~,imageName] = fileparts([pathname filesep filename]);
                 for i = 1:IAT.NLabels

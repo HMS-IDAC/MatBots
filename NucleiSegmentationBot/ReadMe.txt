@@ -73,3 +73,7 @@ added to the name.
 The segmenter will ignore images with _Nuclei in the name. This means you can
 re-classify a folder, without having to delete the _Nuclei images. They'll be
 over-written.
+
+
+-----
+Video Tutorial: https://www.youtube.com/watch?v=pMjHfrK13RU

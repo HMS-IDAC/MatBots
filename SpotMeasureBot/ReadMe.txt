@@ -4,6 +4,9 @@ Call 'spotMeasureBot' without arguments to select an image with spots.
 
 Call 'spotMeasureBot(pathToImage)' to start bot with image in pathToImage.
 
+Call 'spotMeasureTool(I)', where I is a grayscale, double image, if you
+have image data already loaded in Matlab.
+
 Once the image is loaded, draw rectangle around spot.
 A 2D gaussian will be fit to the spot, and the approximate standard deviation
 (average of the standard deviations corresponding to the principal components)

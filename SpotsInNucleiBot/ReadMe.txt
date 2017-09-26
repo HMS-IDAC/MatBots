@@ -24,3 +24,5 @@ https://www.mathworks.com/matlabcentral/fileexchange/41938-fit-2d-gaussian-with-
 
 advPointSourceDetection.m is based on code developed by Francois Aguet:
 http://www.sciencedirect.com/science/article/pii/S1534580713003821
+
+For a video tutorial, see https://www.youtube.com/watch?v=63Ybf4IPYXo

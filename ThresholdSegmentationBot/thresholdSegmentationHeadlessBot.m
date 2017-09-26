@@ -1,4 +1,8 @@
 function thresholdSegmentationHeadlessBot(dirPath, thrModel, saveImages)
+% dirPath: path to folder containing images to segment
+% thrModel: model saved via thresholdSegmentationBot or thresholdSegmentationTool
+% saveImages: true or false, depending if you want to save images to inspect segmentation,
+%             otherwise only tables with object properties are saved
 
 files = dir(dirPath);
 
