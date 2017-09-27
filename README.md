@@ -17,4 +17,9 @@ Matlab function, either on an image or a folder of images.
 Each directory (except 'docs') contains a bot for the task
 suggested by the directory's name. For more details, see ReadMe.txt inside.
 
+Note: different bots sometimes use functions with the same name but slightly
+different implementations. For that reason, to avoid errors use the bot from inside
+that bot's directory. For example, call nucleiSegmentationBot from the folder
+NucleiSegmentationBot, spotsInNucleiBot from SpotsInNucleiBot, and so on.
+
 For references and video tutorials, see https://hms-idac.github.io/MatBots/
