@@ -14,8 +14,11 @@ When possible, bots have a 'headless' mode,
 which allows them to execute a processing pipeline as a typical
 Matlab function, either on an image or a folder of images.
 
-Each directory (except 'docs') contains a bot for the task
+Each directory (except 'docs' and 'Tools') contains a bot for the task
 suggested by the directory's name. For more details, see ReadMe.txt inside.
+
+The directory 'Tools' contains stand-alone tools that may be used by different
+bots (though each bot's folder is self-contained).
 
 Note: different bots sometimes use functions with the same name but slightly
 different implementations. For that reason, to avoid errors use the bot from inside
