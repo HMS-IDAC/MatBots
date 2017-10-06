@@ -24,5 +24,7 @@ Note: different bots sometimes use functions with the same name but slightly
 different implementations. For that reason, to avoid errors use the bot from inside
 that bot's directory. For example, call nucleiSegmentationBot from the folder
 NucleiSegmentationBot, spotsInNucleiBot from SpotsInNucleiBot, and so on.
+Also, do not add a bot's folder to the Matlab path, because that might make
+functions of the current folder lose higher priority status.
 
 For references and video tutorials, see https://hms-idac.github.io/MatBots/
