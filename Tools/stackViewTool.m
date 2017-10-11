@@ -1,4 +1,4 @@
-classdef stackViewBot < handle    
+classdef stackViewTool < handle    
     properties
         Figure
         Axis
@@ -13,87 +13,99 @@ classdef stackViewBot < handle
     end
     
     methods
-        function bot = stackViewBot(S)
-            bot.NPlanes = size(S,3);
-            bot.Stack = S;
-            bot.PlaneIndex = 1;
+        function tool = stackViewTool(S)
+% A tool to view a stack (an image with multiple planes) one plane at a time.
+% 
+% Includes lower and upper thresholds for quick simple image equalization.
+% 
+% To run, call stackViewTool(S), where S is a MxNxL stack of type double.
+% 
+% Not appropriate for stacks where L is too large, because planes are accessed via
+% a popup menu, not a slider.
+% 
+% Example:
+% stackViewTool(double(imread('ngc6543a.jpg'))/255);
             
-            bot.Figure = figure(...%'MenuBar','none', ...
+            tool.NPlanes = size(S,3);
+            tool.Stack = S;
+            tool.PlaneIndex = 1;
+            
+            tool.Figure = figure(...%'MenuBar','none', ...
                                  'NumberTitle','off', ...
                                  'Name','Plane 1', ...
-                                 'CloseRequestFcn',@bot.closeFigure, ...
+                                 'CloseRequestFcn',@tool.closeFigure, ...
                                  'Resize','on');
-            bot.Axis = axes('Parent',bot.Figure,'Position',[0 0 1 1]);
+            tool.Axis = axes('Parent',tool.Figure,'Position',[0 0 1 1]);
             
-            imshow(bot.Stack(:,:,bot.PlaneIndex))
+            imshow(tool.Stack(:,:,tool.PlaneIndex))
             
             dwidth = 200;
             dborder = 10;
             cwidth = dwidth-2*dborder;
             cheight = 20;
             
-            bot.Dialog = dialog('WindowStyle', 'normal',...
+            tool.Dialog = dialog('WindowStyle', 'normal',...
                                 'Name', 'StackViewBot',...
-                                'CloseRequestFcn', @bot.closeDialog,...
+                                'CloseRequestFcn', @tool.closeDialog,...
                                 'Position',[100 100 dwidth 4*dborder+3*cheight]);
             
-            labels = cell(1,bot.NPlanes);
-            for i = 1:bot.NPlanes
+            labels = cell(1,tool.NPlanes);
+            for i = 1:tool.NPlanes
                 labels{i} = sprintf('Plane %d',i);
             end
-            uicontrol('Parent',bot.Dialog,'Style','popupmenu','String',labels,'Position', [dborder 3*dborder+2*cheight cwidth cheight],'Callback',@bot.popupManage);
+            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder 3*dborder+2*cheight cwidth cheight],'Callback',@tool.popupManage);
 
             % lower threshold slider
-            bot.LowerThreshold = 0;
-            bot.LowerThresholdSlider = uicontrol('Parent',bot.Dialog,'Style','slider','Min',0,'Max',1,'Value',bot.LowerThreshold,'Position',[dborder 2+dborder+cheight cwidth cheight],'Callback',@bot.sliderManage,'Tag','lts');
-            addlistener(bot.LowerThresholdSlider,'Value','PostSet',@bot.continuousSliderManage);
+            tool.LowerThreshold = 0;
+            tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder 2+dborder+cheight cwidth cheight],'Callback',@tool.sliderManage,'Tag','lts');
+            addlistener(tool.LowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % upper threshold slider
-            bot.UpperThreshold = 1;
-            bot.UpperThresholdSlider = uicontrol('Parent',bot.Dialog,'Style','slider','Min',0,'Max',1,'Value',bot.UpperThreshold,'Position',[dborder dborder cwidth cheight],'Callback',@bot.sliderManage,'Tag','uts');
-            addlistener(bot.UpperThresholdSlider,'Value','PostSet',@bot.continuousSliderManage);
+            tool.UpperThreshold = 1;
+            tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder dborder cwidth cheight],'Callback',@tool.sliderManage,'Tag','uts');
+            addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
-%             uiwait(bot.Dialog)
+%             uiwait(tool.Dialog)
         end
         
-        function sliderManage(bot,src,callbackdata)
+        function sliderManage(tool,src,callbackdata)
 %             disp(src.Value)
         end
         
-        function popupManage(bot,src,callbackdata)
-            bot.PlaneIndex = src.Value;
-            bot.Axis.Children.CData = bot.Stack(:,:,bot.PlaneIndex);
-            bot.Figure.Name = sprintf('Plane %d', bot.PlaneIndex);
-            bot.LowerThreshold = 0;
-            bot.UpperThreshold = 1;
-            bot.LowerThresholdSlider.Value = 0;
-            bot.UpperThresholdSlider.Value = 1;
+        function popupManage(tool,src,callbackdata)
+            tool.PlaneIndex = src.Value;
+            tool.Axis.Children.CData = tool.Stack(:,:,tool.PlaneIndex);
+            tool.Figure.Name = sprintf('Plane %d', tool.PlaneIndex);
+            tool.LowerThreshold = 0;
+            tool.UpperThreshold = 1;
+            tool.LowerThresholdSlider.Value = 0;
+            tool.UpperThresholdSlider.Value = 1;
         end
         
-        function continuousSliderManage(bot,src,callbackdata)
+        function continuousSliderManage(tool,src,callbackdata)
             tag = callbackdata.AffectedObject.Tag;
             value = callbackdata.AffectedObject.Value;
             if strcmp(tag,'uts')
-                bot.UpperThreshold = value;
+                tool.UpperThreshold = value;
             elseif strcmp(tag,'lts')
-                bot.LowerThreshold = value;
+                tool.LowerThreshold = value;
             end
-            I = bot.Stack(:,:,bot.PlaneIndex);
-            I(I < bot.LowerThreshold) = bot.LowerThreshold;
-            I(I > bot.UpperThreshold) = bot.UpperThreshold;
+            I = tool.Stack(:,:,tool.PlaneIndex);
+            I(I < tool.LowerThreshold) = tool.LowerThreshold;
+            I(I > tool.UpperThreshold) = tool.UpperThreshold;
             I = I-min(I(:));
             I = I/max(I(:));
-            bot.Axis.Children.CData = I;
+            tool.Axis.Children.CData = I;
         end
         
-        function closeDialog(bot,src,callbackdata)
-            delete(bot.Figure);
-            delete(bot.Dialog);
+        function closeDialog(tool,src,callbackdata)
+            delete(tool.Figure);
+            delete(tool.Dialog);
         end
         
-        function closeFigure(bot,src,callbackdata)
-            delete(bot.Figure);
-            delete(bot.Dialog);
+        function closeFigure(tool,src,callbackdata)
+            delete(tool.Figure);
+            delete(tool.Dialog);
         end
     end
 end
