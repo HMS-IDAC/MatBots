@@ -9,10 +9,6 @@ pixelClassificationBot contains all tools necessary to train a model
 to classify the pixels on an image (a task also know as image segmentation).
 There are, however, a few guidelines to follow, as described below.
 
-The bot ships with two folders of images for a 'test-drive':
-Data/Examples, with images to annotate (label), and Data/Classify,
-with images to apply the trained model on.
-
 --------------------------------------------------
 LABEL
 --------------------------------------------------
@@ -74,3 +70,8 @@ over-written. Notice, however, that _Class images are not deleted before classif
 This means that if you had 3 classes and decided to re-classify using only 2 classes,
 the labels for the remaining class remain in the folder. Thus, if you decide to re-classify with
 a different number of classes, it's recommended to delete the _Class images beforehand.
+
+-----
+
+Video tutorial: https://youtu.be/QS1ak-Xwu04
+Sample data: https://www.dropbox.com/s/mg3rxhqznp1shs7/SmallNuclei.zip?dl=0
