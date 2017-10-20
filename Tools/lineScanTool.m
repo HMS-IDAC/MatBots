@@ -16,6 +16,11 @@ classdef lineScanTool < handle
     
     methods
         function tool = lineScanTool(I)
+% lineScanTool(I)
+% Fits a 2-gaussian mixture model to the pixel values under a line drawn in the image.
+% Useful to measure the size of diffraction limited spots or filaments.
+% Input image I should be in the range [0,1].
+
             tool.Image = I;
             
             tool.Figure = figure('NumberTitle','off', ...

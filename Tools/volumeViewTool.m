@@ -25,7 +25,9 @@ classdef volumeViewTool < handle
     
     methods
         function tool = volumeViewTool(V)
-            % V should be 'double' and in the range [0,1]
+% volumeViewTool(V)
+% A tool to visualize a 3D volume.
+% V should be 'double' and in the range [0,1]
             
             tool.Volume = V;
             for i = 1:3
