@@ -21,34 +21,56 @@ classdef volumeViewTool < handle
         PlaneXLabel
         PlaneYLabel
         PlaneZLabel
+        SingleView
     end
     
     methods
-        function tool = volumeViewTool(V)
+        function tool = volumeViewTool(V,varargin)
 % volumeViewTool(V)
 % A tool to visualize a 3D volume.
 % V should be 'double' and in the range [0,1]
+% 
+% volumeViewTool(V,'SingleView') displays the 3 planes as subplots of a
+% single figure window
+%
+% example:
+% load mri
+% V = double(squeeze(D))/255;
+% volumeViewTool(V)
+
+            
+            tool.SingleView = false; % default
+            if nargin > 1 && strcmp(varargin,'SingleView')
+                tool.SingleView = true;
+            end
             
             tool.Volume = V;
             for i = 1:3
                 tool.NPlanes{i} = size(V,i);
                 tool.PlaneIndex{i} = round(tool.NPlanes{i}/2);
             end
-            
-            ss = get(0,'ScreenSize');
-            tool.Figure = figure('Position',[ss(3)/4 ss(4)/3 ss(3)/2 ss(4)/3],...
-                                 'NumberTitle','off', ...
-                                 'Name','Planes', ...
-                                 'CloseRequestFcn',@tool.closeTool, ...
-                                 'Resize','on');
+
+            if tool.SingleView
+                ss = get(0,'ScreenSize');
+                tool.Figure = figure('Position',[ss(3)/4 ss(4)/3 ss(3)/2 ss(4)/3],...
+                                     'NumberTitle','off', ...
+                                     'Name','Planes', ...
+                                     'CloseRequestFcn',@tool.closeTool, ...
+                                     'Resize','on');
+            end
+
             
             tool.LowerThreshold = 0;
             tool.UpperThreshold = 1;
                              
             % y
-            tool.Axis{1} = subplot(1,3,2);
+            if tool.SingleView
+                tool.Axis{1} = subplot(1,3,2);
+            else
+                tool.Figure{1} = figure('Name','Plane Y','NumberTitle','off','CloseRequestFcn',@tool.closeTool);
+                tool.Axis{1} = axes('Parent',tool.Figure{1},'Position',[0 0 1 1]); % subplot(1,3,2);
+            end
 
-%             tool.PlaneHandle{1} = imshow(imrotate(reshape(tool.Volume(tool.PlaneIndex{1},:,:),[tool.NPlanes{2} tool.NPlanes{3}]),90));
             I = tool.Volume(tool.PlaneIndex{1},:,:);
             I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
             tool.PlaneHandle{1} = imshow(tool.applyThresholds(I));
@@ -60,9 +82,14 @@ classdef volumeViewTool < handle
                            1               tool.PlaneIndex{1} tool.NPlanes{3}];
                
             % x
-            tool.Axis{2} = subplot(1,3,1);
+            if tool.SingleView
+                tool.Axis{2} = subplot(1,3,1);
+            else
+                tool.Figure{2} = figure('Name','Plane X','NumberTitle','off','CloseRequestFcn',@tool.closeTool,...
+                    'Position',[tool.Figure{1}.Position(1)+30 tool.Figure{1}.Position(2)-30 tool.Figure{1}.Position(3) tool.Figure{1}.Position(4)]);
+                tool.Axis{2} = axes('Parent',tool.Figure{2},'Position',[0 0 1 1]);
+            end
             
-%             tool.PlaneHandle{2} = imshow(imrotate(reshape(tool.Volume(:,tool.PlaneIndex{2},:),[tool.NPlanes{1} tool.NPlanes{3}]),90));
             I = tool.Volume(:,tool.PlaneIndex{2},:);
             I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
             tool.PlaneHandle{2} = imshow(tool.applyThresholds(I));
@@ -74,9 +101,14 @@ classdef volumeViewTool < handle
                            tool.PlaneIndex{2} 1               tool.NPlanes{3}];
                
             % z
-            tool.Axis{3} = subplot(1,3,3);
+            if tool.SingleView
+                tool.Axis{3} = subplot(1,3,3);
+            else
+                tool.Figure{3} = figure('Name','Plane Z','NumberTitle','off','CloseRequestFcn',@tool.closeTool,...
+                    'Position',[tool.Figure{2}.Position(1)+30 tool.Figure{2}.Position(2)-30 tool.Figure{2}.Position(3) tool.Figure{2}.Position(4)]);
+                tool.Axis{3} = axes('Parent',tool.Figure{3},'Position',[0 0 1 1]); % subplot(1,3,3);
+            end
             
-%             tool.PlaneHandle{3} = imshow(tool.Volume(:,:,tool.PlaneIndex{3}));
             I = tool.Volume(:,:,tool.PlaneIndex{3});
             tool.PlaneHandle{3} = imshow(tool.applyThresholds(I));
             
@@ -121,10 +153,12 @@ classdef volumeViewTool < handle
             tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 dborder cwidth-20 cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
-            tool.FigureContext = figure('Name','3D Context','NumberTitle','off',...
-                                        'Position',[tool.Figure.Position(1)+tool.Figure.Position(3)+10 ...
-                                                    tool.Figure.Position(2) tool.Figure.Position(4) tool.Figure.Position(4)],...
-                                        'CloseRequestFcn', @tool.closeTool);
+            if tool.SingleView
+                position = [tool.Figure.Position(1)+tool.Figure.Position(3)+10 tool.Figure.Position(2) tool.Figure.Position(4) tool.Figure.Position(4)];
+            else
+                position = [tool.Figure{3}.Position(1)+30 tool.Figure{3}.Position(2)-30 tool.Figure{3}.Position(3) tool.Figure{3}.Position(4)];
+            end
+            tool.FigureContext = figure('Name','3D Context','NumberTitle','off','Position', position,'CloseRequestFcn', @tool.closeTool);
             tool.PlaneXHandle = fill3(tool.PlaneX(:,1),tool.PlaneX(:,2),tool.PlaneX(:,3),'r'); hold on
             tool.PlaneYHandle = fill3(tool.PlaneY(:,1),tool.PlaneY(:,2),tool.PlaneY(:,3),'g');
             tool.PlaneZHandle = fill3(tool.PlaneZ(:,1),tool.PlaneZ(:,2),tool.PlaneZ(:,3),'b'); hold off, alpha(0.1)
@@ -161,7 +195,6 @@ classdef volumeViewTool < handle
                     tool.PlaneIndex{1} = round(value);
                     tool.PlaneY(:,2) = tool.PlaneIndex{1}; tool.PlaneYHandle.Vertices = tool.PlaneY;
                     
-%                     tool.PlaneHandle{1}.CData = imrotate(reshape(tool.Volume(tool.PlaneIndex{1},:,:),[tool.NPlanes{2} tool.NPlanes{3}]),90);
                     I = tool.Volume(tool.PlaneIndex{1},:,:);
                     I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
                     tool.PlaneHandle{1}.CData = tool.applyThresholds(I);
@@ -173,7 +206,6 @@ classdef volumeViewTool < handle
                     tool.PlaneIndex{2} = round(value);
                     tool.PlaneX(:,1) = tool.PlaneIndex{2}; tool.PlaneXHandle.Vertices = tool.PlaneX;
                     
-%                     tool.PlaneHandle{2}.CData = imrotate(reshape(tool.Volume(:,tool.PlaneIndex{2},:),[tool.NPlanes{1} tool.NPlanes{3}]),90);
                     I = tool.Volume(:,tool.PlaneIndex{2},:);
                     I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
                     tool.PlaneHandle{2}.CData = tool.applyThresholds(I);
@@ -185,7 +217,6 @@ classdef volumeViewTool < handle
                     tool.PlaneIndex{3} = round(value);
                     tool.PlaneZ(:,3) = tool.PlaneIndex{3}; tool.PlaneZHandle.Vertices = tool.PlaneZ;
                     
-%                     tool.PlaneHandle{3}.CData = tool.Volume(:,:,tool.PlaneIndex{3});
                     I = tool.Volume(:,:,tool.PlaneIndex{3});
                     tool.PlaneHandle{3}.CData = tool.applyThresholds(I);
                     
@@ -193,10 +224,6 @@ classdef volumeViewTool < handle
                     tool.PlaneZLabel.Position = [tool.PlaneZ(3,1),tool.PlaneZ(3,2),tool.PlaneZ(3,3)];
                     tool.PlaneZLabel.String = sprintf('z = %d', tool.PlaneIndex{3});
                 end
-%                 tool.LowerThreshold = 0;
-%                 tool.UpperThreshold = 1;
-%                 tool.LowerThresholdSlider.Value = 0;
-%                 tool.UpperThresholdSlider.Value = 1;
             end
         end
         
@@ -209,7 +236,13 @@ classdef volumeViewTool < handle
         end
         
         function closeTool(tool,src,callbackdata)
-            delete(tool.Figure);
+            if tool.SingleView
+                delete(tool.Figure)
+            else
+                for i = 1:3
+                    delete(tool.Figure{i});
+                end
+            end
             delete(tool.FigureContext);
             delete(tool.Dialog);
         end
