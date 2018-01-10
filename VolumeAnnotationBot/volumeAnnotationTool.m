@@ -39,7 +39,19 @@ classdef volumeAnnotationTool < handle
     
     methods
         function tool = volumeAnnotationTool(V,nLabels,varargin)
-            % V should be 'double' and in the range [0,1]
+% volumeAnnotationTool(V,nClasses)
+% A tool to annotate a 3D volume for machine learning
+% V should be 'double' and in the range [0,1]
+% nClasses is the number of classes (1,2,3,...)
+%
+% example
+% -------
+% load mri
+% V = double(squeeze(D))/255;
+% VAT = volumeAnnotationTool(V,2);
+% % [annotate, click 'Done']
+% MaskClass1 = VAT.LabelMasks(:,:,:,1);
+% MaskClass2 = VAT.LabelMasks(:,:,:,2);
             
             tool.DidAnnotate = 0;
             
