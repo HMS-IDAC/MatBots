@@ -57,23 +57,14 @@ classdef volumeAnnotationTool < handle
                 labels{i} = sprintf('Class %d',i);
             end
             
-            ss = get(0,'ScreenSize');
-            tool.Figure = figure('Position',[ss(3)/4 ss(4)/3 ss(3)/2 ss(4)/3],...
-                                 'NumberTitle','off', ...
-                                 'Name','Planes', ...
-                                 'CloseRequestFcn',@tool.closeTool, ...
-                                 'WindowButtonMotionFcn', @tool.mouseMove, ...
-                                 'WindowButtonDownFcn', @tool.mouseDown, ...
-                                 'WindowButtonUpFcn', @tool.mouseUp, ...
-                                 'Resize','on');
-            
             tool.LowerThreshold = 0;
             tool.UpperThreshold = 1;
                              
             % y
-            tool.Axis{1} = subplot(1,3,2);
+            tool.Figure{1} = figure('Name','Plane Y','NumberTitle','off','CloseRequestFcn',@tool.closeTool,...
+                'WindowButtonMotionFcn', @tool.mouseMove, 'WindowButtonDownFcn', @tool.mouseDown, 'WindowButtonUpFcn', @tool.mouseUp);
+            tool.Axis{1} = axes('Parent',tool.Figure{1},'Position',[0 0 1 1]); % subplot(1,3,2);
             I = tool.Volume(tool.PlaneIndex{1},:,:);
-%             I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
             I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
             tool.PlaneHandle{1} = imshow(tool.applyThresholds(I)); hold on;
             J = zeros(size(I)); J = cat(3,ones(size(I,1),size(I,2),2),J);
@@ -88,9 +79,11 @@ classdef volumeAnnotationTool < handle
                            1               tool.PlaneIndex{1} tool.NPlanes{3}];
                
             % x
-            tool.Axis{2} = subplot(1,3,1);
+           tool.Figure{2} = figure('Name','Plane X','NumberTitle','off','CloseRequestFcn',@tool.closeTool,...
+                'Position',[tool.Figure{1}.Position(1)+30 tool.Figure{1}.Position(2)-30 tool.Figure{1}.Position(3) tool.Figure{1}.Position(4)],...
+                'WindowButtonMotionFcn', @tool.mouseMove, 'WindowButtonDownFcn', @tool.mouseDown, 'WindowButtonUpFcn', @tool.mouseUp);
+            tool.Axis{2} = axes('Parent',tool.Figure{2},'Position',[0 0 1 1]); 
             I = tool.Volume(:,tool.PlaneIndex{2},:);
-%             I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
             I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
             tool.PlaneHandle{2} = imshow(tool.applyThresholds(I)); hold on;
             J = zeros(size(I)); J = cat(3,ones(size(I,1),size(I,2),2),J);
@@ -105,7 +98,10 @@ classdef volumeAnnotationTool < handle
                            tool.PlaneIndex{2} 1               tool.NPlanes{3}];
                
             % z
-            tool.Axis{3} = subplot(1,3,3);
+            tool.Figure{3} = figure('Name','Plane Z','NumberTitle','off','CloseRequestFcn',@tool.closeTool,...
+                'Position',[tool.Figure{2}.Position(1)+30 tool.Figure{2}.Position(2)-30 tool.Figure{2}.Position(3) tool.Figure{2}.Position(4)],...
+                'WindowButtonMotionFcn', @tool.mouseMove, 'WindowButtonDownFcn', @tool.mouseDown, 'WindowButtonUpFcn', @tool.mouseUp);
+            tool.Axis{3} = axes('Parent',tool.Figure{3},'Position',[0 0 1 1]); % subplot(1,3,3);
             I = tool.Volume(:,:,tool.PlaneIndex{3});
             tool.PlaneHandle{3} = imshow(tool.applyThresholds(I)); hold on;
             J = zeros(size(I)); J = cat(3,ones(size(I,1),size(I,2),2),J);
@@ -180,10 +176,8 @@ classdef volumeAnnotationTool < handle
             uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',buttonDoneLabel,'Position',[dborder+20 dborder cwidth-20 2*cheight],'Callback',@tool.buttonDonePushed);
             
             % context figure
-            tool.FigureContext = figure('Name','3D Context','NumberTitle','off',...
-                                        'Position',[tool.Figure.Position(1)+tool.Figure.Position(3)+10 ...
-                                                    tool.Figure.Position(2) tool.Figure.Position(4) tool.Figure.Position(4)],...
-                                        'CloseRequestFcn', @tool.closeTool);
+            position = [tool.Figure{3}.Position(1)+30 tool.Figure{3}.Position(2)-30 tool.Figure{3}.Position(3) tool.Figure{3}.Position(4)];
+            tool.FigureContext = figure('Name','3D Context','NumberTitle','off','Position',position,'CloseRequestFcn',@tool.closeTool);
             tool.PlaneXHandle = fill3(tool.PlaneX(:,1),tool.PlaneX(:,2),tool.PlaneX(:,3),'r'); hold on
             tool.PlaneYHandle = fill3(tool.PlaneY(:,1),tool.PlaneY(:,2),tool.PlaneY(:,3),'g');
             tool.PlaneZHandle = fill3(tool.PlaneZ(:,1),tool.PlaneZ(:,2),tool.PlaneZ(:,3),'b'); hold off, alpha(0.1)
@@ -242,50 +236,57 @@ classdef volumeAnnotationTool < handle
             tool.MouseIsDown = false;
         end
         
-        function mouseMove(tool,~,~)
+        function mouseMove(tool,src,~)
             if tool.MouseIsDown
                 ps = tool.PenSize;
-                for i = 1:3
-                    p = tool.Axis{i}.CurrentPoint;
-                    col = round(p(1,1));
-                    row = round(p(1,2));
-                    imageSize = tool.ImageSize{i};
-                    if row > ps && row <= imageSize(1)-ps && col > ps && col <= imageSize(2)-ps
-                        [Y,X] = meshgrid(-ps:ps,-ps:ps);
-                        switch i
-                            case 1
-                                Curr = tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex);
-                                Mask = reshape(sqrt(X.^2+Y.^2) < ps,[1 size(Y,1) size(Y,2)]);
-                                if tool.RadioDraw.Value == 1
-                                    tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
-                                    tool.TransparencyHandle{1}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(0.5*max(Curr,Mask),size(Y));
-                                elseif tool.RadioErase.Value == 1
-                                    tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
-                                    tool.TransparencyHandle{1}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(min(Curr,0.5*(1-Mask)),size(Y));
-                                end
-                            case 2
-                                Curr = tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex);
-                                Mask = reshape(sqrt(X.^2+Y.^2) < ps,[size(Y,1) 1 size(Y,2)]);
-                                if tool.RadioDraw.Value == 1
-                                    tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
-                                    tool.TransparencyHandle{2}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(0.5*max(Curr,Mask),size(Y));
-                                elseif tool.RadioErase.Value == 1
-                                    tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
-                                    tool.TransparencyHandle{2}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(min(Curr,0.5*(1-Mask)),size(Y));
-                                end
-                            case 3
-                                Curr = tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex);
-                                Mask = sqrt(X.^2+Y.^2) < ps;
-                                if tool.RadioDraw.Value == 1
-                                    tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex) = max(Curr,Mask);
-                                    tool.TransparencyHandle{3}.AlphaData(row-ps:row+ps,col-ps:col+ps) = 0.5*max(Curr,Mask);
-                                elseif tool.RadioErase.Value == 1
-                                    tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex) = min(Curr,1-Mask);
-                                    tool.TransparencyHandle{3}.AlphaData(row-ps:row+ps,col-ps:col+ps) = min(Curr,0.5*(1-Mask));
-                                end
-                        end
+
+                if strcmp(src.Name,'Plane Y')
+                    i = 1;
+                elseif strcmp(src.Name,'Plane X')
+                    i = 2;
+                elseif strcmp(src.Name,'Plane Z')
+                    i = 3;
+                end
+                p = tool.Axis{i}.CurrentPoint;
+                col = round(p(1,1));
+                row = round(p(1,2));
+                imageSize = tool.ImageSize{i};
+                if row > ps && row <= imageSize(1)-ps && col > ps && col <= imageSize(2)-ps
+                    [Y,X] = meshgrid(-ps:ps,-ps:ps);
+                    switch i
+                        case 1
+                            Curr = tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex);
+                            Mask = reshape(sqrt(X.^2+Y.^2) < ps,[1 size(Y,1) size(Y,2)]);
+                            if tool.RadioDraw.Value == 1
+                                tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
+                                tool.TransparencyHandle{1}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(0.5*max(Curr,Mask),size(Y));
+                            elseif tool.RadioErase.Value == 1
+                                tool.LabelMasks(tool.PlaneIndex{1},row-ps:row+ps,col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
+                                tool.TransparencyHandle{1}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(min(Curr,0.5*(1-Mask)),size(Y));
+                            end
+                        case 2
+                            Curr = tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex);
+                            Mask = reshape(sqrt(X.^2+Y.^2) < ps,[size(Y,1) 1 size(Y,2)]);
+                            if tool.RadioDraw.Value == 1
+                                tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex) = max(Curr,Mask);
+                                tool.TransparencyHandle{2}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(0.5*max(Curr,Mask),size(Y));
+                            elseif tool.RadioErase.Value == 1
+                                tool.LabelMasks(row-ps:row+ps,tool.PlaneIndex{2},col-ps:col+ps,tool.LabelIndex) = min(Curr,1-Mask);
+                                tool.TransparencyHandle{2}.AlphaData(row-ps:row+ps,col-ps:col+ps) = reshape(min(Curr,0.5*(1-Mask)),size(Y));
+                            end
+                        case 3
+                            Curr = tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex);
+                            Mask = sqrt(X.^2+Y.^2) < ps;
+                            if tool.RadioDraw.Value == 1
+                                tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex) = max(Curr,Mask);
+                                tool.TransparencyHandle{3}.AlphaData(row-ps:row+ps,col-ps:col+ps) = 0.5*max(Curr,Mask);
+                            elseif tool.RadioErase.Value == 1
+                                tool.LabelMasks(row-ps:row+ps,col-ps:col+ps,tool.PlaneIndex{3},tool.LabelIndex) = min(Curr,1-Mask);
+                                tool.TransparencyHandle{3}.AlphaData(row-ps:row+ps,col-ps:col+ps) = min(Curr,0.5*(1-Mask));
+                            end
                     end
                 end
+
             end
         end
         
@@ -300,12 +301,10 @@ classdef volumeAnnotationTool < handle
                 end
                 
                 I = tool.Volume(tool.PlaneIndex{1},:,:);
-%                 I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
                 I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
                 tool.PlaneHandle{1}.CData = tool.applyThresholds(I);
                 
                 I = tool.Volume(:,tool.PlaneIndex{2},:);
-%                 I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
                 I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
                 tool.PlaneHandle{2}.CData = tool.applyThresholds(I);
                 
@@ -317,7 +316,6 @@ classdef volumeAnnotationTool < handle
                     tool.PlaneY(:,2) = tool.PlaneIndex{1}; tool.PlaneYHandle.Vertices = tool.PlaneY;
                     
                     I = tool.Volume(tool.PlaneIndex{1},:,:);
-%                     I = imrotate(reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]),90);
                     I = reshape(I,[tool.NPlanes{2} tool.NPlanes{3}]);
                     tool.PlaneHandle{1}.CData = tool.applyThresholds(I);
                     tool.TransparencyHandle{1}.AlphaData = reshape(0.5*tool.LabelMasks(tool.PlaneIndex{1},:,:,tool.LabelIndex),size(I));
@@ -333,7 +331,6 @@ classdef volumeAnnotationTool < handle
                     tool.PlaneX(:,1) = tool.PlaneIndex{2}; tool.PlaneXHandle.Vertices = tool.PlaneX;
                     
                     I = tool.Volume(:,tool.PlaneIndex{2},:);
-%                     I = imrotate(reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]),90);
                     I = reshape(I,[tool.NPlanes{1} tool.NPlanes{3}]);
                     tool.PlaneHandle{2}.CData = tool.applyThresholds(I);
                     tool.TransparencyHandle{2}.AlphaData = reshape(0.5*tool.LabelMasks(:,tool.PlaneIndex{2},:,tool.LabelIndex),size(I));
@@ -392,7 +389,9 @@ classdef volumeAnnotationTool < handle
         end
         
         function closeTool(tool,~,~)
-            delete(tool.Figure);
+            for i = 1:3
+                delete(tool.Figure{i});
+            end
             delete(tool.FigureContext);
             delete(tool.Dialog);
         end
