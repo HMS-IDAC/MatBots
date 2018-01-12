@@ -35,6 +35,16 @@ classdef volumeAnnotationToolPro < handle
         HLineHandle
         VLineHandle
         DidAnnotate
+        PlaneIndexLabel
+        LoopSetLeft
+        LoopSetRight
+        Loop
+        PlaneSlider
+        NLoops
+        LoopInterval
+        Looping
+        NLoopsEdit
+        LoopIntervalEdit
     end
     
     methods
@@ -84,7 +94,7 @@ classdef volumeAnnotationToolPro < handle
             tool.HLineHandle{1} = plot([1 tool.NPlanes{3}],[tool.PlaneIndex{2} tool.PlaneIndex{2}],'r');
             tool.VLineHandle{1} = plot([tool.PlaneIndex{3} tool.PlaneIndex{3}],[1 tool.NPlanes{2}],'b');  hold off;
             tool.ImageSize{1} = size(I);
-            tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
+            % tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
             tool.PlaneY = [1               tool.PlaneIndex{1} 1              ;...
                            tool.NPlanes{2} tool.PlaneIndex{1} 1              ;...
                            tool.NPlanes{2} tool.PlaneIndex{1} tool.NPlanes{3};...
@@ -103,7 +113,7 @@ classdef volumeAnnotationToolPro < handle
             tool.HLineHandle{2} = plot([1 tool.NPlanes{3}],[tool.PlaneIndex{1} tool.PlaneIndex{1}],'g');
             tool.VLineHandle{2} = plot([tool.PlaneIndex{3} tool.PlaneIndex{3}],[1 tool.NPlanes{1}],'b');  hold off;
             tool.ImageSize{2} = size(I);
-            tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
+            % tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
             tool.PlaneX = [tool.PlaneIndex{2} 1               1              ;...
                            tool.PlaneIndex{2} tool.NPlanes{1} 1              ;...
                            tool.PlaneIndex{2} tool.NPlanes{1} tool.NPlanes{3};...
@@ -121,7 +131,7 @@ classdef volumeAnnotationToolPro < handle
             tool.HLineHandle{3} = plot([1 tool.NPlanes{2}],[tool.PlaneIndex{1} tool.PlaneIndex{1}],'g');
             tool.VLineHandle{3} = plot([tool.PlaneIndex{2} tool.PlaneIndex{2}],[1 tool.NPlanes{1}],'r');  hold off;
             tool.ImageSize{3} = size(I);
-            tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
+            % tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
             tool.PlaneZ = [1               1               tool.PlaneIndex{3};...
                            tool.NPlanes{2} 1               tool.PlaneIndex{3};...
                            tool.NPlanes{2} tool.NPlanes{1} tool.PlaneIndex{3};...
@@ -136,51 +146,65 @@ classdef volumeAnnotationToolPro < handle
             tool.Dialog = dialog('WindowStyle', 'normal',...
                                 'Name', 'VolumeAnnotationToolPro',...
                                 'CloseRequestFcn', @tool.closeTool,...
-                                'Position',[100 100 dwidth 12*dborder+14*cheight+shiftUp]);
+                                'Position',[100 100 dwidth 12*dborder+14*cheight+3*shiftUp]);
             
             % pencil/eraser slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','Pencil/Eraser Size','Position',[dborder+20 10.5*dborder+13*cheight+shiftUp cwidth-20 cheight],'HorizontalAlignment','left');
-            tool.PenSizeText = uicontrol('Parent',tool.Dialog,'Style','text','String','5','Position',[dborder+20+(cwidth-20)/2-25 11*dborder+12*cheight+shiftUp 50 cheight],'HorizontalAlignment','center');
-            uicontrol('Parent',tool.Dialog,'Style','edit','String','10','Position',[dborder+cwidth-50 11*dborder+12*cheight+shiftUp 50 cheight],'HorizontalAlignment','right','Callback',@tool.changeSliderRange,'Tag','sliderMax');
-            uicontrol('Parent',tool.Dialog,'Style','edit','String','1','Position',[dborder+20 11*dborder+12*cheight+shiftUp 50 cheight],'HorizontalAlignment','left','Callback',@tool.changeSliderRange,'Tag','sliderMin');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','Pencil/Eraser Size','Position',[dborder+20 10.5*dborder+13*cheight+3*shiftUp cwidth-20 cheight],'HorizontalAlignment','left');
+            tool.PenSizeText = uicontrol('Parent',tool.Dialog,'Style','text','String','5','Position',[dborder+20+(cwidth-20)/2-25 11*dborder+12*cheight+3*shiftUp 50 cheight],'HorizontalAlignment','center');
+            uicontrol('Parent',tool.Dialog,'Style','edit','String','10','Position',[dborder+cwidth-50 11*dborder+12*cheight+3*shiftUp 50 cheight],'HorizontalAlignment','right','Callback',@tool.changeSliderRange,'Tag','sliderMax');
+            uicontrol('Parent',tool.Dialog,'Style','edit','String','1','Position',[dborder+20 11*dborder+12*cheight+3*shiftUp 50 cheight],'HorizontalAlignment','left','Callback',@tool.changeSliderRange,'Tag','sliderMin');
             tool.PenSize = 5;
-            tool.Slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',10,'Value',tool.PenSize,'Position',[dborder+20 11*dborder+11*cheight+shiftUp cwidth-20 cheight],'Callback',@tool.sliderManage,'Tag','pss');
+            tool.Slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',10,'Value',tool.PenSize,'Position',[dborder+20 11*dborder+11*cheight+3*shiftUp cwidth-20 cheight],'Callback',@tool.sliderManage,'Tag','pss');
             addlistener(tool.Slider,'Value','PostSet',@tool.continuousSliderManage);
                             
             % erase/draw
-            tool.RadioDraw = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+20 10*dborder+10*cheight+shiftUp 70 cheight],'String','Draw','Callback',@tool.radioDraw);
-            tool.RadioErase = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+90 10*dborder+10*cheight+shiftUp 70 cheight],'String','Erase','Callback',@tool.radioErase);
+            tool.RadioDraw = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+20 10*dborder+10*cheight+3*shiftUp 70 cheight],'String','Draw','Callback',@tool.radioDraw);
+            tool.RadioErase = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder+90 10*dborder+10*cheight+3*shiftUp 70 cheight],'String','Erase','Callback',@tool.radioErase);
             tool.RadioDraw.Value = 1;
                             
             % class popup
-            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 9*dborder+9*cheight+shiftUp cwidth-20 cheight],'Callback',@tool.popupManage);
-                            
+            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 9*dborder+9*cheight+3*shiftUp cwidth-20 cheight],'Callback',@tool.popupManage);
+            
+            % n loops, loop interval
+            tool.NLoopsEdit = uicontrol('Parent',tool.Dialog,'Style','edit','String','1','Position',[dborder+20 8*dborder+8*cheight+2.5*shiftUp 50 cheight],'HorizontalAlignment','left');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','# loops','Position',[dborder+70 8*dborder+8*cheight+2.5*shiftUp 50 cheight],'HorizontalAlignment','left');
+            tool.LoopIntervalEdit = uicontrol('Parent',tool.Dialog,'Style','edit','String','0.1','Position',[dborder+20+cwidth/2 8*dborder+8*cheight+2.5*shiftUp 50 cheight],'HorizontalAlignment','left');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','loop interval','Position',[dborder+70+cwidth/2 8*dborder+8*cheight+2.5*shiftUp 100 cheight],'HorizontalAlignment','left');
+            
             % y slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 6*dborder+6*cheight 20 cheight]);
-            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{1},'Value',tool.PlaneIndex{1},'Position',[dborder+20 6*dborder+6*cheight cwidth-20 cheight],'Tag','ys');
-            addlistener(slider,'Value','PostSet',@tool.continuousSliderManage);
+            uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 6*dborder+6*cheight+1.5*shiftUp 20 cheight],'HorizontalAlignment','left');
+            tool.PlaneSlider{1} = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{1},'Value',tool.PlaneIndex{1},'Position',[dborder+20 6*dborder+6*cheight+1.5*shiftUp cwidth-20 cheight],'Tag','ys');
+            addlistener(tool.PlaneSlider{1},'Value','PostSet',@tool.continuousSliderManage);
+            tool.PlaneIndexLabel{1} = uicontrol('Parent',tool.Dialog,'Style','text','String',sprintf('%d',tool.PlaneIndex{1}),'Position',[dborder 7*dborder+6*cheight-3+0.5*shiftUp 60 cheight],'HorizontalAlignment','left');
+            tool.LoopSetLeft{1} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','[ 1','Position',[dwidth-3*dborder-3*60 7*dborder+6*cheight+0.5*shiftUp 60 cheight],'Callback',@tool.loopSetLeft,'Tag','ylsl');
+            tool.LoopSetRight{1} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',sprintf('%d ]',tool.NPlanes{1}),'Position',[dwidth-2*dborder-2*60 7*dborder+6*cheight+0.5*shiftUp 60 cheight],'Callback',@tool.loopSetRight,'Tag','ylsr');
+            tool.Loop{1} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Loop','Position',[dwidth-dborder-60 7*dborder+6*cheight+0.5*shiftUp 60 cheight],'Tag','ly','Callback',@tool.loop);
                             
             % x slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','x','Position',[dborder 7*dborder+7*cheight+shiftUp 20 cheight],'HorizontalAlignment','left');
-            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{2},'Value',tool.PlaneIndex{2},'Position',[dborder+20 7*dborder+7*cheight+shiftUp cwidth-20 cheight],'Tag','xs');
-            addlistener(slider,'Value','PostSet',@tool.continuousSliderManage);
-            uicontrol('Parent',tool.Dialog,'Style','text','String',sprintf('%d',tool.PlaneIndex{2}),'Position',[dborder 8*dborder+7*cheight 60 cheight],'HorizontalAlignment','left');
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','[ 1','Position',[dwidth-3*dborder-3*60 8*dborder+7*cheight 60 cheight]);
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',sprintf('%d ]',tool.NPlanes{2}),'Position',[dwidth-2*dborder-2*60 8*dborder+7*cheight 60 cheight]);
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Loop','Position',[dwidth-dborder-60 8*dborder+7*cheight 60 cheight]);
+            uicontrol('Parent',tool.Dialog,'Style','text','String','x','Position',[dborder 7*dborder+7*cheight+2.5*shiftUp 20 cheight],'HorizontalAlignment','left');
+            tool.PlaneSlider{2} = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{2},'Value',tool.PlaneIndex{2},'Position',[dborder+20 7*dborder+7*cheight+2.5*shiftUp cwidth-20 cheight],'Tag','xs');
+            addlistener(tool.PlaneSlider{2},'Value','PostSet',@tool.continuousSliderManage);
+            tool.PlaneIndexLabel{2} = uicontrol('Parent',tool.Dialog,'Style','text','String',sprintf('%d',tool.PlaneIndex{2}),'Position',[dborder 8*dborder+7*cheight-3+1.5*shiftUp 60 cheight],'HorizontalAlignment','left');
+            tool.LoopSetLeft{2} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','[ 1','Position',[dwidth-3*dborder-3*60 8*dborder+7*cheight+1.5*shiftUp 60 cheight],'Callback',@tool.loopSetLeft,'Tag','xlsl');
+            tool.LoopSetRight{2} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',sprintf('%d ]',tool.NPlanes{2}),'Position',[dwidth-2*dborder-2*60 8*dborder+7*cheight+1.5*shiftUp 60 cheight],'Callback',@tool.loopSetRight,'Tag','xlsr');
+            tool.Loop{2} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Loop','Position',[dwidth-dborder-60 8*dborder+7*cheight+1.5*shiftUp 60 cheight],'Tag','lx','Callback',@tool.loop);
                             
             % z slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','z','Position',[dborder 5*dborder+5*cheight 20 cheight]);
-            slider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{3},'Value',tool.PlaneIndex{3},'Position',[dborder+20 5*dborder+5*cheight cwidth-20 cheight],'Tag','zs');
-            addlistener(slider,'Value','PostSet',@tool.continuousSliderManage);
+            uicontrol('Parent',tool.Dialog,'Style','text','String','z','Position',[dborder 5*dborder+5*cheight+0.5*shiftUp 20 cheight],'HorizontalAlignment','left');
+            tool.PlaneSlider{3} = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes{3},'Value',tool.PlaneIndex{3},'Position',[dborder+20 5*dborder+5*cheight+0.5*shiftUp cwidth-20 cheight],'Tag','zs');
+            addlistener(tool.PlaneSlider{3},'Value','PostSet',@tool.continuousSliderManage);
+            tool.PlaneIndexLabel{3} = uicontrol('Parent',tool.Dialog,'Style','text','String',sprintf('%d',tool.PlaneIndex{3}),'Position',[dborder 6*dborder+5*cheight-3-0.5*shiftUp 60 cheight],'HorizontalAlignment','left');
+            tool.LoopSetLeft{3} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','[ 1','Position',[dwidth-3*dborder-3*60 6*dborder+5*cheight-0.5*shiftUp 60 cheight],'Callback',@tool.loopSetLeft,'Tag','zlsl');
+            tool.LoopSetRight{3} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',sprintf('%d ]',tool.NPlanes{3}),'Position',[dwidth-2*dborder-2*60 6*dborder+5*cheight-0.5*shiftUp 60 cheight],'Callback',@tool.loopSetRight,'Tag','zlsr');
+            tool.Loop{3} = uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Loop','Position',[dwidth-dborder-60 6*dborder+5*cheight-0.5*shiftUp 60 cheight],'Tag','lz','Callback',@tool.loop);
 
             % lower threshold slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','_t','Position',[dborder 4*dborder+3*cheight 20 cheight]);
+            uicontrol('Parent',tool.Dialog,'Style','text','String','_t','Position',[dborder 4*dborder+3*cheight 20 cheight],'HorizontalAlignment','left');
             tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder+20 4*dborder+3*cheight cwidth-20 cheight],'Tag','lts');
             addlistener(tool.LowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % upper threshold slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder 3*dborder+2*cheight 20 cheight]);
+            uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder 3*dborder+2*cheight 20 cheight],'HorizontalAlignment','left');
             tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 3*dborder+2*cheight cwidth-20 cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
@@ -204,18 +228,77 @@ classdef volumeAnnotationToolPro < handle
             tool.PlaneZLabel = text(tool.PlaneZ(3,1),tool.PlaneZ(3,2),tool.PlaneZ(3,3),sprintf('z = %d', tool.PlaneIndex{3}));
             
             tool.MouseIsDown = false;
+            
+            tool.NLoops = 1;
+            tool.LoopInterval = 0.1;
+            tool.Looping = false;
                         
-%             for j = 1:10
-%                 for i = 1:tool.NPlanes{3}
-%                     slider.Value = i;
-%                     pause(0.1)
-%                 end
-%                 for i = tool.NPlanes{3}:-1:1
-%                     slider.Value = i;
-%                     pause(0.1)
-%                 end
-%             end
 %             uiwait(tool.Dialog)
+        end
+        
+        function loop(tool,src,~)
+            if not(tool.Looping)
+                tool.NLoops = str2double(tool.NLoopsEdit.String);
+                tool.LoopInterval = str2double(tool.LoopIntervalEdit.String);
+                for i = 1:3
+                    tool.Loop{i}.Enable = 'off'; 
+                end
+                tool.Looping = true;
+                switch src.Tag
+                    case 'ly'
+                        sIndex = 1;
+                    case 'lx'
+                        sIndex = 2;
+                    case 'lz'
+                        sIndex = 3;
+                end
+                iLeft = str2double(tool.LoopSetLeft{sIndex}.String(3:end));
+                iRight = str2double(tool.LoopSetRight{sIndex}.String(1:end-2));
+                if iLeft >= iRight
+                    uiwait(errordlg('Left limit should be smaller than right limit.', 'Error'));
+                end
+
+                for j = 1:tool.NLoops
+                    tool.NLoopsEdit.String = sprintf('%d/%d',j,tool.NLoops);
+                    for i = iLeft:iRight
+                        tool.PlaneSlider{sIndex}.Value = i;
+                        pause(tool.LoopInterval);
+                    end
+                    for i = iRight:-1:iLeft
+                        tool.PlaneSlider{sIndex}.Value = i;
+                        pause(tool.LoopInterval);
+                    end
+                end
+                tool.Looping = false;
+                for i = 1:3
+                    tool.Loop{i}.Enable = 'on'; 
+                end
+                tool.NLoopsEdit.String = sprintf('%d',tool.NLoops);
+            end
+        end
+        
+        function loopSetLeft(tool,src,~)
+            switch src.Tag
+                case 'ylsl'
+                    sIndex = 1;
+                case 'xlsl'
+                    sIndex = 2;
+                case 'zlsl'
+                    sIndex = 3;
+            end
+            tool.LoopSetLeft{sIndex}.String = sprintf('[ %d',tool.PlaneIndex{sIndex});
+        end
+        
+        function loopSetRight(tool,src,~)
+            switch src.Tag
+                case 'ylsr'
+                    sIndex = 1;
+                case 'xlsr'
+                    sIndex = 2;
+                case 'zlsr'
+                    sIndex = 3;
+            end
+            tool.LoopSetRight{sIndex}.String = sprintf('%d ]',tool.PlaneIndex{sIndex});
         end
         
         function changeSliderRange(tool,src,~)
@@ -347,7 +430,8 @@ classdef volumeAnnotationToolPro < handle
                     tool.PlaneHandle{1}.CData = tool.applyThresholds(I);
                     tool.TransparencyHandle{1}.AlphaData = reshape(0.5*tool.LabelMasks(tool.PlaneIndex{1},:,:,tool.LabelIndex),size(I));
                     
-                    tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
+                    % tool.Axis{1}.Title.String = sprintf('y = %d', tool.PlaneIndex{1});
+                    tool.PlaneIndexLabel{1}.String = sprintf('%d', tool.PlaneIndex{1});
                     tool.PlaneYLabel.Position = [tool.PlaneY(2,1),tool.PlaneY(2,2),tool.PlaneY(2,3)];
                     tool.PlaneYLabel.String = sprintf('y = %d', tool.PlaneIndex{1});
                     
@@ -362,7 +446,8 @@ classdef volumeAnnotationToolPro < handle
                     tool.PlaneHandle{2}.CData = tool.applyThresholds(I);
                     tool.TransparencyHandle{2}.AlphaData = reshape(0.5*tool.LabelMasks(:,tool.PlaneIndex{2},:,tool.LabelIndex),size(I));
                     
-                    tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
+                    % tool.Axis{2}.Title.String = sprintf('x = %d', tool.PlaneIndex{2});
+                    tool.PlaneIndexLabel{2}.String = sprintf('%d', tool.PlaneIndex{2});
                     tool.PlaneXLabel.Position = [tool.PlaneX(1,1),tool.PlaneX(1,2),tool.PlaneX(1,3)];
                     tool.PlaneXLabel.String = sprintf('x = %d', tool.PlaneIndex{2});
                     
@@ -376,7 +461,8 @@ classdef volumeAnnotationToolPro < handle
                     tool.PlaneHandle{3}.CData = tool.applyThresholds(I);
                     tool.TransparencyHandle{3}.AlphaData = 0.5*tool.LabelMasks(:,:,tool.PlaneIndex{3},tool.LabelIndex);
                     
-                    tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
+                    % tool.Axis{3}.Title.String = sprintf('z = %d', tool.PlaneIndex{3});
+                    tool.PlaneIndexLabel{3}.String = sprintf('%d', tool.PlaneIndex{3});
                     tool.PlaneZLabel.Position = [tool.PlaneZ(3,1),tool.PlaneZ(3,2),tool.PlaneZ(3,3)];
                     tool.PlaneZLabel.String = sprintf('z = %d', tool.PlaneIndex{3});
                     
