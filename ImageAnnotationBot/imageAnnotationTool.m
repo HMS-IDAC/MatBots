@@ -22,6 +22,10 @@ classdef imageAnnotationTool < handle
         SliderMax
         LowerThreshold
         UpperThreshold
+        LowerThresholdBox
+        UpperThresholdBox
+        LowerThresholdSlider
+        UpperThresholdSlider
     end
     
     methods
@@ -61,23 +65,25 @@ classdef imageAnnotationTool < handle
             tool.Dialog = dialog('WindowStyle', 'normal',...
                                 'Name', 'ImageAnnotationBot',...
                                 'CloseRequestFcn', @tool.closeDialog,...
-                                'Position',[100 100 dwidth 10*dborder+10*cheight]);
+                                'Position',[100 100 dwidth 11*dborder+11*cheight]);
             labels = cell(1,nLabels);
             for i = 1:nLabels
                 labels{i} = sprintf('Class %d',i);
             end
 
-            uicontrol('Parent',tool.Dialog,'Style','text','String','Lower/Upper Thresholds','Position',[dborder 9*dborder+9*cheight cwidth cheight],'HorizontalAlignment','left');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','Lower/Upper Thresholds','Position',[dborder 10*dborder+10*cheight cwidth cheight],'HorizontalAlignment','left');
             
             % lower threshold slider
             tool.LowerThreshold = 0;
-            lowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder 8*dborder+8*cheight cwidth cheight],'Tag','lts');
-            addlistener(lowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
+            tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder 9*dborder+8*cheight cwidth cheight],'Tag','lts');
+            addlistener(tool.LowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
+            tool.LowerThresholdBox = uicontrol('Parent',tool.Dialog,'Style','edit','String','0.0000','Position',[dborder 9*dborder+9*cheight 70 cheight],'HorizontalAlignment','left','Tag','ltb','Callback',@tool.changeThreshold);
             
             % upper threshold slider
             tool.UpperThreshold = 1;
-            upperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder 7*dborder+7*cheight cwidth cheight],'Tag','uts');
-            addlistener(upperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
+            tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder 8*dborder+7*cheight cwidth cheight],'Tag','uts');
+            addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
+            tool.UpperThresholdBox = uicontrol('Parent',tool.Dialog,'Style','edit','String','1.0000','Position',[dborder+cwidth-70 8*dborder+6*cheight 70 cheight],'HorizontalAlignment','right','Tag','utb','Callback',@tool.changeThreshold);
             
             % erase/draw
             tool.RadioDraw = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder 5*dborder+6*cheight cwidth cheight],'String','Draw','Callback',@tool.radioDraw);
@@ -105,6 +111,23 @@ classdef imageAnnotationTool < handle
             uicontrol('Parent',tool.Dialog,'Style','pushbutton','String',doneButtonLabel,'Position',[dborder dborder cwidth cheight],'Callback',@tool.buttonDonePushed);
             
             uiwait(tool.Dialog)
+        end
+        
+        function changeThreshold(tool,src,callbackdata)
+            value = str2double(src.String);
+            if strcmp(src.Tag,'ltb')
+                tool.LowerThreshold = value;
+                tool.LowerThresholdSlider.Value = value;
+            elseif strcmp(src.Tag,'utb')
+                tool.UpperThreshold = value;
+                tool.UpperThresholdSlider.Value = value;
+            end
+            I = tool.Image;
+            I(I < tool.LowerThreshold) = tool.LowerThreshold;
+            I(I > tool.UpperThreshold) = tool.UpperThreshold;
+            I = I-min(I(:));
+            I = I/max(I(:));
+            tool.ImageHandle.CData = I;
         end
         
         function changeSliderRange(tool,src,callbackdata)
@@ -153,8 +176,10 @@ classdef imageAnnotationTool < handle
                 value = callbackdata.AffectedObject.Value;
                 if strcmp(tag,'uts')
                     tool.UpperThreshold = value;
+                    tool.UpperThresholdBox.String = sprintf('%.04f', value);
                 elseif strcmp(tag,'lts')
                     tool.LowerThreshold = value;
+                    tool.LowerThresholdBox.String = sprintf('%.04f', value);
                 end
                 I = tool.Image;
                 I(I < tool.LowerThreshold) = tool.LowerThreshold;
