@@ -233,7 +233,7 @@ classdef volumeAnnotationToolPro < handle
             tool.LoopInterval = 0.1;
             tool.Looping = false;
                         
-%             uiwait(tool.Dialog)
+            uiwait(tool.Dialog)
         end
         
         function loop(tool,src,~)

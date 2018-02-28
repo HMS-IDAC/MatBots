@@ -10,7 +10,7 @@ while annotateAnother
             nLabels = str2double(answer{1});
             V = double(volumeRead([pathname filesep filename]));
             V = V-min(V(:)); V = V./max(V(:));
-            IAT = volumeAnnotationTool(V,nLabels,'Save Labels');
+            IAT = volumeAnnotationToolPro(V,nLabels,'Save Labels');
             if IAT.DidAnnotate
                 [~,volumeName] = fileparts([pathname filesep filename]);
                 for i = 1:IAT.NLabels
