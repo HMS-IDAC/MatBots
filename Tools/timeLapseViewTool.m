@@ -15,7 +15,7 @@ classdef timeLapseViewTool < handle
     end
     
     methods
-        function tool = timeLapseViewTool(V,varargin)
+        function tool = timeLapseViewTool(V)
 % timeLapseViewTool(V)
 % A tool to visualize a time lapse movie
 % V should be m by n by z 'double' and in the range [0,1]
