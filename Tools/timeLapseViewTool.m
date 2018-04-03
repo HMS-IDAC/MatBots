@@ -28,7 +28,7 @@ classdef timeLapseViewTool < handle
             
             tool.Volume = V;
             tool.NPlanes = size(V,3);
-            tool.PlaneIndex = round(tool.NPlanes/2);
+            tool.PlaneIndex = 1;
             
             tool.LowerThreshold = 0;
             tool.UpperThreshold = 1;
