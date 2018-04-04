@@ -29,7 +29,7 @@ classdef verticalRegistrationTool < handle
             
             ss = get(0,'ScreenSize'); % [left botton width height]
             tool.FigureImages = figure('Position',[ss(3)/4 ss(4)/4 ss(3)/2 ss(4)/2],...
-                'NumberTitle','off', 'Name','Segmentation', 'CloseRequestFcn',@tool.closeFigure, 'Resize','on');
+                'NumberTitle','off', 'Name','Vertical Registration Tool', 'CloseRequestFcn',@tool.closeFigure, 'Resize','on');
             
             vPositions = linspace(1,size(tool.Image{1},2),nVLines+2);
             vPositions = vPositions(2:end-1);
