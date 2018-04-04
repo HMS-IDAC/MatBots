@@ -13,6 +13,10 @@ classdef switchBetweenImagesTool < handle
 %
 % switches betwen Image1 and Image2 at the pressing of the Space key;
 % works best for images of the same size
+%
+% example:
+% I = imread('ngc6543a.jpg');
+% switchBetweenImagesTool(I(:,:,1),I(:,:,2));
 
             tool.Image{1} = Image1;
             tool.Image{2} = Image2;
