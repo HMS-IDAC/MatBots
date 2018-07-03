@@ -12,10 +12,13 @@ classdef timeLapseViewTool < handle
         UpperThreshold
         LowerThresholdSlider
         UpperThresholdSlider
+        FigurePlot
+        AxisPlotPosition
+        Data
     end
     
     methods
-        function tool = timeLapseViewTool(V)
+        function tool = timeLapseViewTool(V,varargin)
 % timeLapseViewTool(V)
 % A tool to visualize a time lapse movie
 % V should be m by n by z 'double' and in the range [0,1]
@@ -25,7 +28,7 @@ classdef timeLapseViewTool < handle
 % load mri
 % V = double(squeeze(D))/255;
 % timeLapseViewTool(V)
-            
+
             tool.Volume = V;
             tool.NPlanes = size(V,3);
             tool.PlaneIndex = 1;
@@ -42,12 +45,12 @@ classdef timeLapseViewTool < handle
             
             tool.Axis.Title.String = sprintf('frame %d', tool.PlaneIndex);
             
-            dwidth = 300;
+            dwidth = 1000;%300;
             dborder = 10;
             cwidth = dwidth-2*dborder;
             cheight = 20;
             
-            tool.Dialog = dialog('WindowStyle', 'normal',...
+            tool.Dialog = dialog('WindowStyle', 'normal', 'Resize', 'on',...
                                 'Name', 'TimeLapseViewTool',...
                                 'CloseRequestFcn', @tool.closeTool,...
                                 'Position',[100 100 dwidth 4*dborder+4*cheight]);
@@ -66,6 +69,15 @@ classdef timeLapseViewTool < handle
             uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder dborder 20 cheight]);
             tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 dborder cwidth-20 cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
+            
+            if nargin > 1
+                tool.FigurePlot = figure('Name','Frame','NumberTitle','off','CloseRequestFcn',@tool.closeTool);
+                tool.Data = varargin{1};
+                plot(1:length(tool.Data),tool.Data)
+                hold on
+                tool.AxisPlotPosition = plot(tool.PlaneIndex,tool.Data(tool.PlaneIndex),'o');
+                hold off
+            end
             
 %             uiwait(tool.Dialog)
         end
@@ -89,6 +101,10 @@ classdef timeLapseViewTool < handle
                 tool.PlaneHandle.CData = tool.applyThresholds(I);
 
                 tool.Axis.Title.String = sprintf('frame %d', tool.PlaneIndex);
+                if ~isempty(tool.FigurePlot)
+                    tool.AxisPlotPosition.XData = tool.PlaneIndex;
+                    tool.AxisPlotPosition.YData = tool.Data(tool.PlaneIndex);
+                end
             end
         end
         
@@ -102,6 +118,7 @@ classdef timeLapseViewTool < handle
         
         function closeTool(tool,~,~)
             delete(tool.Figure)
+            delete(tool.FigurePlot);
             delete(tool.Dialog);
         end
     end
