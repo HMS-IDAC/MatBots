@@ -17,6 +17,7 @@ classdef symmetryTool < handle
     methods
         function tool = symmetryTool(Image,varargin)
             tool.Image = Image;
+            tool.OutImage = Image;
             tool.Tform = affine2d(eye(3,3));
             tool.DoneButtonPushed = false;
             
